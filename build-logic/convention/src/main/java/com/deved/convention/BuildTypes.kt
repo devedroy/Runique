@@ -13,7 +13,11 @@ internal fun Project.configureBuildTypes(
     extensionType: ExtensionType
 ) {
     commonExtension.run {
-        val apiKey = gradleLocalProperties(rootDir, providers).getProperty("API_KEY  ")
+        buildFeatures {
+            buildConfig = true
+        }
+
+        val apiKey = gradleLocalProperties(rootDir, providers).getProperty("API_KEY")
         when (extensionType) {
             ExtensionType.APPLICATION -> {
                 extensions.configure<ApplicationExtension> {
@@ -21,7 +25,9 @@ internal fun Project.configureBuildTypes(
                         debug {
                             configureDebugBuildType(apiKey)
                         }
-                        release { }
+                        release {
+                            configureReleaseBuildType(commonExtension, apiKey)
+                        }
                     }
                 }
             }
@@ -32,7 +38,9 @@ internal fun Project.configureBuildTypes(
                         debug {
                             configureDebugBuildType(apiKey)
                         }
-                        release { }
+                        release {
+                            configureReleaseBuildType(commonExtension, apiKey)
+                        }
                     }
                 }
             }
@@ -44,4 +52,17 @@ internal fun Project.configureBuildTypes(
 private fun BuildType.configureDebugBuildType(apiKey: String) {
     buildConfigField("String", "API_KEY", "\"$apiKey\"")
     buildConfigField("String", "BASE_URL", "\"https://runique.pl-coding.com:8080\"")
+}
+
+private fun BuildType.configureReleaseBuildType(
+    commonExtension: CommonExtension<*, *, *, *, *, *>, apiKey: String
+) {
+    buildConfigField("String", "API_KEY", "\"$apiKey\"")
+    buildConfigField("String", "BASE_URL", "\"https://runique.pl-coding.com:8080\"")
+
+    isMinifyEnabled = true
+    proguardFiles(
+        commonExtension.getDefaultProguardFile("proguard-android-optimize.txt"),
+        "proguard-rules.pro"
+    )
 }
